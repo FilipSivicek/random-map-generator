@@ -21,10 +21,8 @@ struct Eroder{
     double min_incline = 0.1;
     static const int r = 2;
     double weights[2 * r + 1][2 * r + 1];
-    ofstream MyFile;
     
     Eroder(Table<double> _H): H(_H.m, _H.n), W(_H.m, _H.n){
-        MyFile = ofstream("log.txt");
         for (int i = 0; i < H.m; i++){
             for (int j = 0; j < H.n; j++){
                 H(i, j) = _H(i, j);
@@ -41,8 +39,6 @@ struct Eroder{
                 sum += w;
             }
 
-        //MyFile << "sum: " << sum << "\n";
-        
         for (int dy = 0; dy < 2 * r + 1; dy++)
             for (int dx = 0; dx < 2 * r + 1; dx++) weights[dx][dy] /= sum;
         
@@ -58,33 +54,25 @@ struct Eroder{
         for (int t = 0; t < lifetime; t++){
             int o[2] = {(int) pos.x, (int) pos.y};
 
-            // MyFile << "o: " << o[0] << " " << o[1] << "\n";
-
             W(o[0], o[1]) = 1; 
             double old_height = bilerp(H(o[0], o[1]), H(o[0] + 1, o[1]), 
                                        H(o[0], o[1] + 1), H(o[0] + 1, o[1] + 1), 
                                        pos.x - o[0], pos.y - o[1]);
 
-            // MyFile <<"H: " << H(o[0], o[1]) << " " << H(o[0] + 1, o[1]) << " " << H(o[0], o[1] + 1) << " " << H(o[0] + 1, o[1] + 1) << "\n";
             Vec3 g = bilerp(normala(H, o[0], o[1], s), 
                             normala(H, o[0] + 1, o[1], s),
                             normala(H, o[0], o[1] + 1, s), 
                             normala(H, o[0] + 1, o[1] + 1, s), 
                             pos.x - o[0], pos.y - o[1]);
-            
-            // MyFile << "g: " << g << "\n";
 
             Vec movement{g.x, g.y};
             movement.normalize();
 
             dir = lerp(movement, dir, inertia);
             if (dir.length() < 1e-25) {
-                // MyFile << "broken\n";
                 break;
             }
             dir.normalize();
-
-            // MyFile << "dir: " << dir << "\n";
 
             pos += dir;
             o[0] = (int) pos.x;
@@ -109,27 +97,19 @@ struct Eroder{
 
             int ix = pos.x, iy = pos.y;
             Vec p{pos.x - ix, pos.y - iy};
-                
-            // MyFile << "sediment: " << sediment << "\n";
-            // MyFile << "p.x: " << p.x << "\n";
-            // MyFile << "p.y: " << p.y << "\n";
 
             for (int dy = 0; dy < 2; dy++)
                 for (int dx = 0; dx < 2; dx++){
                     H(ix + dx, iy + dy) += sediment * (dx * p.x + (1 - dx) * (1 - p.x)) *
                                                       (dy * p.y + (1 - dy) * (1 - p.y));
-                    // MyFile << sediment * (dx * p.x + (1 - dx) * (1 - p.x)) * (dy * p.y + (1 - dy) * (1 - p.y)) << "\n";
                 }
             
             if (sediment == 0){
                 double erode = std::min((can_sediment - mud) * erosion, -delta);
-                // MyFile << "erode: " << erode << "\n";
                 for (int dy = 0; dy < 2 * r + 1; dy++)
                     for (int dx = 0; dx < 2 * r + 1; dx++){
                         int i = ix - r + dx, j = iy - r + dy;
                         double piece = erode * weights[dx][dy];
-                        // MyFile << "weights: " << weights[dx][dy] << "\n";
-                        // MyFile << "piece: " << piece << "\n";
                         H(i, j) -= piece;
                         mud += piece;
                     }
@@ -138,9 +118,6 @@ struct Eroder{
             if (delta < 0) delta *= -1;
             speed = sqrt(speed * speed + delta * gravity);
             water *= (1 - evaporation);
-
-            // MyFile <<"H: " << H(o[0], o[1]) << " " << H(o[0] + 1, o[1]) << " " << H(o[0], o[1] + 1) << " " << H(o[0] + 1, o[1] + 1) << "\n";
-            
         }
     }
 };

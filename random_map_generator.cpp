@@ -44,7 +44,7 @@ void zapis(Table<Vec3> &T, string fname){
 }
 
 int main(int argc, char** argv) {
-    string fname = "island.png";
+    string fname = "pictures/island.png";
     int n = 1024;
     double coeff = 0.7;
 
@@ -115,8 +115,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    Gradient gWater("bath_112.gpf");
-    Gradient gLand("europe_3.gpf");
+    Gradient gWater("gradients/bath_112.gpf");
+    Gradient gLand("gradients/europe_3.gpf");
     Table<Vec3> F(n, n);
     for (int i = 0; i < H.m; i++){
         for (int j = 0; j < H.n; j++){
@@ -150,5 +150,4 @@ int main(int argc, char** argv) {
         }
     }
     zapis(F, fname);
-    zapis(erod.W, "water.png");
 }
